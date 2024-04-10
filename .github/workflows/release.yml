@@ -1,0 +1,56 @@
+name: Build on Tag
+
+on:
+  push:
+    tags: '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout kernel source
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+    
+    - name: Unshallow submodules
+      shell: bash
+      run: /usr/bin/git submodule foreach /usr/bin/git fetch --unshallow
+
+    - name: Patch KernelSU version detection
+      shell: bash
+      run: /usr/bin/sed -i 's/KSU_GIT_VERSION := $(shell cd $(srctree)\/$(src); \/usr\/bin\/env PATH="$$PATH":\/usr\/bin:\/usr\/local\/bin git rev-list --count HEAD)/KSU_GIT_VERSION := $(\/usr\/bin\/git -c KernelSU rev-list --count HEAD)/g' KernelSU/kernel/Makefile
+
+    - name: Checkout zipper
+      uses: actions/checkout@v4
+      with:
+        repository: Builds-Feas/AnyKernel3
+        ref: ocean-lineage
+        path: zipper
+
+    - name: Android kernel build
+      uses: lemniskett/android-kernel-actions@master
+      id: build
+      env:
+        NAME: ocean-ksu-wg-lineage-21
+      with:
+        arch: arm64
+        compiler: aosp-clang/llvm-r416183/clang-r416183
+        defconfig: ocean_defconfig
+        image: Image
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ocean-ksu-wg-lineage-21
+        retention-days: 5
+        path: |
+          /github/workspace/zipper/*.zip
+          /home/runner/work/android_kernel_motorola_sdm632/android_kernel_motorola_sdm632/zipper/*.zip
+
+    - name: Release build
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "${{ steps.build.outputs.outfile }},/github/workspace/zipper/*.zip,/home/runner/work/android_kernel_motorola_sdm632/android_kernel_motorola_sdm632/zipper/*.zip"
+        token: ${{ secrets.GITHUB_TOKEN }}
+
