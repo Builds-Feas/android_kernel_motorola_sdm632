@@ -12,14 +12,14 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: true
-    
+
     - name: Unshallow submodules
       shell: bash
       run: /usr/bin/git submodule foreach /usr/bin/git fetch --unshallow
 
     - name: Patch KernelSU version detection
       shell: bash
-      run: /usr/bin/sed -i 's/KSU_GIT_VERSION := $(shell cd $(srctree)\/$(src); \/usr\/bin\/env PATH="$$PATH":\/usr\/bin:\/usr\/local\/bin git rev-list --count HEAD)/KSU_GIT_VERSION := 1482/g' KernelSU/kernel/Makefile
+      run: /usr/bin/sed -i 's/KSU_GIT_VERSION := $(shell cd $(srctree)\/$(src); \/usr\/bin\/env PATH="$$PATH":\/usr\/bin:\/usr\/local\/bin git rev-list --count HEAD)/KSU_GIT_VERSION := 1604/g' KernelSU/kernel/Makefile
 
     - name: Checkout zipper
       uses: actions/checkout@v4
